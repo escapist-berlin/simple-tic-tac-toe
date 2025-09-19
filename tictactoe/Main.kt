@@ -4,15 +4,10 @@ import java.util.*
 
 fun main() {
     val scanner = Scanner(System.`in`)
-    val input = scanner.nextLine()
-
-    val grid2D: MutableList<MutableList<Char>> = mutableListOf(
-        mutableListOf(input[0], input[1], input[2]),
-        mutableListOf(input[3], input[4], input[5]),
-        mutableListOf(input[6], input[7], input[8])
-    )
-
+    val grid2D: MutableList<MutableList<Char>> = MutableList(3) { MutableList(3) { ' ' } }
     println(formatBoard(grid2D))
+
+    var currentPlayer = 'X'
 
     while (true) {
         val move = scanner.nextLine().split(" ")
@@ -29,53 +24,24 @@ fun main() {
 
         when {
             row !in 1..3 || col !in 1..3 -> println("Coordinates should be from 1 to 3!")
-            grid2D[row - 1][col - 1] != '_' -> println("This cell is occupied! Choose another one!")
+            grid2D[row - 1][col - 1] != ' ' -> println("This cell is occupied! Choose another one!")
             else -> {
-                grid2D[row - 1][col - 1] = 'X'
+                grid2D[row - 1][col - 1] = currentPlayer
                 println(formatBoard(grid2D))
-                break
+
+                val result = checkGameState(grid2D)
+                if (result == "X wins" || result == "O wins" || result == "Draw") {
+                    println(result)
+                    break
+                }
+
+                currentPlayer = if (currentPlayer == 'X') 'O' else 'X'
             }
         }
     }
-
-    /*val xCount = input.count { it == 'X' }
-    val oCount = input.count { it == 'O' }
-
-    var xWins = false
-    var oWins = false
-
-    // Check rows
-    for (el in grid2D) {
-        if (el.all { it == 'X' }) xWins = true
-        if (el.all { it == 'O' }) oWins = true
-    }
-
-    // Check columns
-    for (col in 0..2) {
-        if (grid2D.all { it[col] == 'X' }) xWins = true
-        if (grid2D.all { it[col] == 'O' }) oWins = true
-    }
-
-    // Check diagonals
-    if (grid2D[0][0] == grid2D[1][1] && grid2D[1][1] == grid2D[2][2]) {
-        if (grid2D[0][0] == 'X') xWins = true
-        if (grid2D[0][0] == 'O') oWins = true
-    }
-    if (grid2D[0][2] == grid2D[1][1] && grid2D[1][1] == grid2D[2][0]) {
-        if (grid2D[0][2] == 'X') xWins = true
-        if (grid2D[0][2] == 'O') oWins = true
-    }
-
-    when {
-        (xWins && oWins) || kotlin.math.abs(xCount - oCount) > 1 -> println("Impossible")
-        xWins -> println("X wins")
-        oWins -> println("O wins")
-        input.contains('_') -> println("Game not finished")
-        else -> println("Draw")
-    }*/
 }
 
-fun formatBoard(grid: List<List<Char>>): String {
+fun formatBoard(grid: MutableList<MutableList<Char>>): String {
     return """
         ---------
         | ${grid[0][0]} ${grid[0][1]} ${grid[0][2]} |
@@ -83,4 +49,21 @@ fun formatBoard(grid: List<List<Char>>): String {
         | ${grid[2][0]} ${grid[2][1]} ${grid[2][2]} |
         ---------
     """.trimIndent()
+}
+
+fun checkGameState(grid: List<List<Char>>): String {
+    val lines = listOf(
+        grid[0], grid[1], grid[2], // rows
+        listOf(grid[0][0], grid[1][0], grid[2][0]), // col 0
+        listOf(grid[0][1], grid[1][1], grid[2][1]), // col 1
+        listOf(grid[0][2], grid[1][2], grid[2][2]), // col 2
+        listOf(grid[0][0], grid[1][1], grid[2][2]), // diag
+        listOf(grid[0][2], grid[1][1], grid[2][0])  // anti-diag
+    )
+    return when {
+        lines.any { it.all { c -> c == 'X' } } -> "X wins"
+        lines.any { it.all { c -> c == 'O' } } -> "O wins"
+        grid.flatten().none { it == ' ' } -> "Draw"
+        else -> ""
+    }
 }
